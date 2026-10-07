@@ -5,3 +5,12 @@ target/
 *.fst
 *.log
 *.csv
+
+# Vivado outputs from the bring-up designs
+bringup/*/out/
+bringup/*/vivado_proj/
+.Xil/
+*.jou
+*.str
+clockInfo.txt
+dfx_runtime.txt
