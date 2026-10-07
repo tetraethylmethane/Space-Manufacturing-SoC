@@ -31,3 +31,7 @@ lint_off -rule IMPERFECTSCH -file "*prim_flop_2sync.sv"
 
 lint_off -rule WIDTH  -file "*uartdpi.sv"
 lint_off -rule UNUSED -file "*uartdpi.sv"
+
+// The 5.020 release (Ubuntu 24.04) emits invalid trace code for chandle
+// variables, and uartdpi holds one. Its internals aren't worth tracing anyway.
+tracing_off -file "*uartdpi.sv"
