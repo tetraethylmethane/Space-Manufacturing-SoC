@@ -610,6 +610,7 @@ contribution available cheaply: nobody has characterised how a
 is removed.
 
 \subsection{Establishing microgravity representativeness without flight access}
+\label{sec:microg}
 
 Gravity cannot be switched off on a bench, but its two consequences can be
 attacked separately, and the evacuable chamber does most of the work.
@@ -1769,6 +1770,79 @@ verdicts. RQ3 asks how reliably the second and third branches can be separated
 from the first.}
 \label{fig:fdir}
 \end{figure}
+
+\paragraph{The inspection sensors.}
+The optical channel is an OV7670 on an 8-bit parallel interface. Only the
+luminance bytes of its YUV422 output are kept, giving a \(320\times240\)
+greyscale frame of \SI{75}{\kilo\byte}; that resolution is set by the block-RAM
+budget, not by the sensor. One frame is taken per layer, roughly every
+\SIrange{30}{60}{\second}, from a view looking down on the layer and a view
+across it at an angle. Illumination comes only from a diffused LED ring at fixed
+exposure, so images are comparable from print to print. The thermal channel is an
+MLX90640 array (\(32\times24\) pixels, \ang{110} field of view) on I\(^2\)C.
+The classifier takes the \(320\times240\) frame as input, is quantised to int8,
+and is streamed from QSPI flash one layer at a time.
+
+\paragraph{Making the inspection hold up in orbit.}
+An inspection system trained and tested in a laboratory can fail in orbit for
+reasons that have nothing to do with print quality. Each of the conditions in
+Table~\ref{tab:visionspace} is designed for from the start rather than handled
+afterwards, and each has a ground test that stands in for it. None of this
+amounts to flight qualification: the OV7670 is a ground prototype, and a flight
+unit would use a space-qualified image sensor alongside the flash-based FPGA
+discussed in Section~\ref{sec:wp2}. Lens contamination from outgassing is flagged
+at run time but not characterised, for the reason given in
+Section~\ref{sec:thermal}.
+
+\begin{table}[htbp]
+\centering
+\caption{Conditions in orbit that affect the inspection loop, and how each is
+handled and tested on the ground.}
+\label{tab:visionspace}
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.6cm} L{3.6cm} X@{}}
+\toprule
+\textbf{Condition} & \textbf{Effect on inspection} & \textbf{Design response
+and ground test} \\
+\midrule
+Radiation on the image sensor &
+Hot and dead pixels; corrupted pixel values or lost rows &
+Training data augmented with hot pixels, dead pixels, bit flips and dropped
+rows. A dark frame with the LEDs off is taken each layer to map hot pixels
+before classification \\
+Radiation on weights and processor &
+Silently wrong classification, with no error signal (Gap~2) &
+CRC check on the weights before each inference. A corrective action requires
+agreement with the classical monitor; disagreement pauses the print rather than
+acting (Figure~\ref{fig:fdir}). Measured under fault injection in WP5 \\
+No convective cooling &
+Sensor temperature and image noise rise during long prints &
+Sensor temperature is logged with every frame. Accuracy is measured on images
+taken at \SI{1}{\milli\bar}, not only at ambient pressure \\
+Outgassing and fumes &
+Haze builds up on the lens over a print &
+The empty bed is imaged before each print and compared with a reference; a
+drop in contrast flags the lens for attention \\
+No gravity on the melt &
+Defects look different: no sagging or drooping of overhangs &
+Training and test sets include prints made on the side and inverted, following
+the orientation tests of Section~\ref{sec:microg}; accuracy must not depend on
+which way gravity points \\
+No ambient light &
+Scene lit only by the onboard source &
+Already the design case: diffused LED ring at fixed exposure \\
+Launch vibration &
+Camera pose shifts and focus drifts &
+Lens focus is locked mechanically and mounts are rigid. Fiducial marks on the
+bed let the camera pose be re-estimated before each print \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The test that matters most is the one Gap~2 points to: with faults injected into
+the image path, the stored weights and the processor, how often does a wrong
+corrective action get through? That rate is reported as a result of WP5 alongside
+the classification accuracy.
 
 \paragraph{Deliverable of WP4.}
 An integrated machine that prints unattended, detects at least four classes of
