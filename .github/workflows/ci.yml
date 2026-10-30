@@ -1,0 +1,48 @@
+name: CI
+
+# Builds the firmware and the Verilator model, runs hello-world in simulation
+# and fails unless the simulated UART prints it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sim:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TOOLCHAIN: lowrisc-toolchain-gcc-rv32imcb-x86_64-20250710-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Verilator and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator libelf-dev srecord
+          verilator --version
+
+      - name: Install the RISC-V toolchain
+        run: |
+          mkdir -p "$HOME/tools"
+          curl -sSL "https://github.com/lowRISC/lowrisc-toolchains/releases/download/20250710-1/$TOOLCHAIN.tar.xz" \
+            | tar -xJ -C "$HOME/tools"
+          ln -s "$HOME/tools/$TOOLCHAIN" "$HOME/tools/rv32"
+          "$HOME/tools/rv32/bin/riscv32-unknown-elf-gcc" --version
+
+      - name: Install Python packages
+        run: pip install --user --break-system-packages -r python-requirements.txt
+
+      - name: Build firmware
+        run: bash util/build_sw.sh
+
+      - name: Build simulator
+        run: bash util/build_sim.sh
+
+      - name: Run hello-world
+        run: |
+          bash util/run_sim.sh
+          grep -q "Hello World" "$HOME"/space-am-soc-sim/run/*.log

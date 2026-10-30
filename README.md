@@ -22,7 +22,7 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] Toolchain set up; LED test design running on the board
 - [x] Ibex bitstream for the Boolean Board, with hello-world in on-chip RAM
 - [x] Ibex running hello-world in Verilator simulation
-- [ ] Ibex confirmed printing over UART on hardware
+- [x] Ibex printing over UART on the Boolean Board (115,200 baud)
 - [ ] `riscv-arch-test` passing under RISCOF
 - [ ] CI running on every push
 - [ ] Bus interface and memory map frozen
