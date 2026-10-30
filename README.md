@@ -23,8 +23,8 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] Ibex bitstream for the Boolean Board, with hello-world in on-chip RAM
 - [x] Ibex running hello-world in Verilator simulation
 - [x] Ibex printing over UART on the Boolean Board (115,200 baud)
-- [ ] `riscv-arch-test` passing under RISCOF
-- [ ] CI running on every push
+- [x] `riscv-arch-test` 3.9.1 passing under RISCOF against Sail (92/92: I, M, C, Zifencei, privilege)
+- [x] CI running on every push (firmware, simulator, hello-world check)
 - [ ] Bus interface and memory map frozen
 
 ## Repository layout
@@ -33,7 +33,7 @@ Phase 1 of 6, working towards the month-2 review.
 bringup/     small designs for checking the board and tools (start here)
 data/        pin constraints for each supported board
 doc/         project documentation, proposal and upstream notes
-dv/          Verilator simulation testbench
+dv/          Verilator testbench; riscof/ holds the compliance setup
 rtl/         SoC RTL: fpga/ holds board top levels, system/ the SoC
 sw/c/        firmware (C), built with CMake
 util/        build, programming and helper scripts
@@ -43,6 +43,8 @@ vendor/      vendored lowRISC IP (Ibex, primitives); don't edit directly
 ## Getting started
 
 [doc/getting-started.md](doc/getting-started.md) covers installing the tools, building the firmware and bitstream, and programming the board.
+
+To run the compliance tests, install RISCOF (`pip install riscof`), put the Sail RISC-V simulator in `~/tools/sail` and clone `riscv-arch-test` at tag 3.9.1 into `~/riscv-arch-test`. Then run `util/run_riscof.sh`. It builds a simulator with 4 MiB of RAM on first use and writes a report to `~/space-am-soc-riscof/report.html`. Pass a sub-suite such as `rv32i_m/I` to run only part of it.
 
 ## Documentation
 

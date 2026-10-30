@@ -1,0 +1,11 @@
+{
+  "base": {
+    "mtvec": {
+      "direct": { "supported": false, "base_alignment": 2 },
+      "vectored": { "supported": true, "base_alignment": 8 }
+    },
+    "xtval_nonzero": {
+      "software_breakpoint": false
+    }
+  }
+}

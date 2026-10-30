@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // This is the top level that connects the demo system to the virtual devices.
-module top_verilator (input logic clk_i, rst_ni);
+module top_verilator #(
+  parameter logic [31:0] MemSize  = 128 * 1024,
+  parameter logic [31:0] MemStart = 32'h00100000
+) (input logic clk_i, rst_ni);
 
   localparam ClockFrequency = 50_000_000;
   localparam BaudRate       = 115_200;
@@ -17,7 +20,9 @@ module top_verilator (input logic clk_i, rst_ni);
     .PwmWidth       ( 12                  ),
     .ClockFrequency ( ClockFrequency      ),
     .BaudRate       ( BaudRate            ),
-    .RegFile        ( ibex_pkg::RegFileFF )
+    .RegFile        ( ibex_pkg::RegFileFF ),
+    .MemSize        ( MemSize             ),
+    .MemStart       ( MemStart            )
   ) u_ibex_demo_system (
     //Input
     .clk_sys_i (clk_i),

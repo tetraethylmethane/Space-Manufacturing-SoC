@@ -143,6 +143,16 @@ parameters:
     default: "../../../../../sw/c/build/blank/blank.vmem"
     paramtype: vlogparam
 
+  MemSize:
+    datatype: int
+    description: RAM size in bytes (power of two)
+    paramtype: vlogparam
+
+  MemStart:
+    datatype: int
+    description: RAM base address, aligned to MemSize; Ibex boots at MemStart + 0x80
+    paramtype: vlogparam
+
   # For value definition, please see ip/prim/rtl/prim_pkg.sv
   PRIM_DEFAULT_IMPL:
     datatype: str
@@ -298,3 +308,23 @@ targets:
           - "--unroll-count 72"
     parameters:
       - PRIM_DEFAULT_IMPL=prim_pkg::ImplGeneric
+
+  # Compliance testing (util/run_riscof.sh): 4 MiB RAM at 0x00400000, no tracing.
+  sim_riscof:
+    <<: *default_target
+    default_tool: verilator
+    filesets_append:
+      - files_verilator
+    toplevel: top_verilator
+    tools:
+      verilator:
+        mode: cc
+        verilator_options:
+          - '-CFLAGS "-std=c++14 -Wall -DTOPLEVEL_NAME=top_verilator"'
+          - '-LDFLAGS "-pthread -lutil -lelf"'
+          - "-Wall"
+          - "--unroll-count 72"
+    parameters:
+      - PRIM_DEFAULT_IMPL=prim_pkg::ImplGeneric
+      - MemSize=4194304
+      - MemStart=4194304

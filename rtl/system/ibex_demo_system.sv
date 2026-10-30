@@ -18,7 +18,11 @@ module ibex_demo_system #(
   parameter int unsigned        ClockFrequency = 50_000_000,
   parameter int unsigned        BaudRate       = 115_200,
   parameter ibex_pkg::regfile_e RegFile        = ibex_pkg::RegFileFPGA,
-  parameter                     SRAMInitFile   = ""
+  parameter                     SRAMInitFile   = "",
+  // RAM size and base. The FPGA builds keep the defaults; the compliance
+  // simulation (sim_riscof) uses a larger RAM because some tests exceed 128 KiB.
+  parameter logic [31:0]        MemSize        = 128 * 1024,
+  parameter logic [31:0]        MemStart       = 32'h00100000
 ) (
   input  logic clk_sys_i,
   input  logic rst_sys_ni,
@@ -38,8 +42,8 @@ module ibex_demo_system #(
   input  logic        td_i,     // JTAG test data input pad
   output logic        td_o      // JTAG test data output pad
 );
-  localparam logic [31:0] MEM_SIZE      = 128 * 1024; // 128 KiB
-  localparam logic [31:0] MEM_START     = 32'h00100000;
+  localparam logic [31:0] MEM_SIZE      = MemSize;
+  localparam logic [31:0] MEM_START     = MemStart;
   localparam logic [31:0] MEM_MASK      = ~(MEM_SIZE-1);
 
   localparam logic [31:0] GPIO_SIZE     =  4 * 1024; //  4 KiB
@@ -252,7 +256,7 @@ module ibex_demo_system #(
 
     .hart_id_i  (32'b0),
     // First instruction executed is at 0x0 + 0x80.
-    .boot_addr_i(32'h00100000),
+    .boot_addr_i(MEM_START),
 
     .instr_req_o       (core_instr_req),
     .instr_gnt_i       (core_instr_gnt),
