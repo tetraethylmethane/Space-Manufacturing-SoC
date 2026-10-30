@@ -6,9 +6,10 @@ OUTPUT_ARCH(riscv)
 
 MEMORY
 {
-    /* 124 KiB should be enough for anybody... */
-    ram         : ORIGIN = 0x00100000, LENGTH = 0x1E000 /* 124 KiB */
-    stack       : ORIGIN = 0x0011E000, LENGTH = 0x02000 /*   4 KiB */
+    /* The IRAM window (0x0000_0000, 128 KiB) holds code and data until the
+       separate DRAM at 0x0002_0000 is populated; see doc/bus-and-memory-map.md. */
+    ram         : ORIGIN = 0x00000000, LENGTH = 0x1E000 /* 120 KiB */
+    stack       : ORIGIN = 0x0001E000, LENGTH = 0x02000 /*   8 KiB */
 }
 
 /* Stack information variables */

@@ -5,7 +5,7 @@
 // This is the top level that connects the demo system to the virtual devices.
 module top_verilator #(
   parameter logic [31:0] MemSize  = 128 * 1024,
-  parameter logic [31:0] MemStart = 32'h00100000
+  parameter logic [31:0] MemStart = soc_pkg::IRAM_BASE
 ) (input logic clk_i, rst_ni);
 
   localparam ClockFrequency = 50_000_000;

@@ -11,6 +11,7 @@ filesets:
       - pulp:riscv:debug_module
     files:
       - rtl/system/jtag_id_pkg.sv
+      - rtl/system/soc_pkg.sv
       - rtl/system/ibex_demo_system.sv
       - rtl/system/dm_top.sv
       - rtl/system/debounce.sv

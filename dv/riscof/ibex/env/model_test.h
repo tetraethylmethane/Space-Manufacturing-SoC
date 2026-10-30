@@ -1,13 +1,13 @@
 // Target macros for riscv-arch-test on the Ibex demo system (Verilator).
 //
 // At the end of a test the signature is printed through the simulator control
-// block (0x20000) as one 8-digit hex word per line, which is the format RISCOF
+// block (0x1000F000) as one 8-digit hex word per line, which is the format RISCOF
 // compares, and the simulation is stopped by writing 1 to 0x20008.
 
 #ifndef _COMPLIANCE_MODEL_H
 #define _COMPLIANCE_MODEL_H
 
-#define SIM_CTRL_BASE 0x20000
+#define SIM_CTRL_BASE 0x1000F000
 
 #define RVMODEL_DATA_SECTION
 

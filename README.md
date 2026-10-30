@@ -25,7 +25,7 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] Ibex printing over UART on the Boolean Board (115,200 baud)
 - [x] `riscv-arch-test` 3.9.1 passing under RISCOF against Sail (92/92: I, M, C, Zifencei, privilege)
 - [x] CI running on every push (firmware, simulator, hello-world check)
-- [ ] Bus interface and memory map frozen
+- [x] Bus interface and memory map frozen ([spec](doc/bus-and-memory-map.md))
 
 ## Repository layout
 
@@ -50,6 +50,7 @@ To run the compliance tests, install RISCOF (`pip install riscof`), put the Sail
 
 - [Getting started](doc/getting-started.md): setup, build and programming
 - [Build guide](doc/build-guide.md): the staged plan for building and hardening the SoC
+- [Bus interface and memory map](doc/bus-and-memory-map.md): the frozen contract every block is written against
 - [Research proposal](doc/proposal/proposal.pdf), with LaTeX sources in the same folder
 - [Upstream ibex-demo-system README](doc/ibex-demo-system.md)
 

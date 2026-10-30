@@ -126,11 +126,14 @@ the core present. This is worth an afternoon and saves weeks.
 
 ### Memory map
 
+Frozen on 30 Oct 2026. The authoritative version, with the bus rules and the
+change log, is [bus-and-memory-map.md](bus-and-memory-map.md).
+
 | Base | Size | Region |
 |---|---|---|
 | `0x0000_0000` | 128 KB | Instruction RAM (BRAM) |
 | `0x0002_0000` | 128 KB | Data RAM (BRAM) |
-| `0x0004_0000` | 64 KB | Frame buffer (BRAM) |
+| `0x0004_0000` | 128 KB | Frame buffer (BRAM), 75 KB used |
 | `0x1000_0000` | 4 KB | GPIO (LEDs, switches, buttons) |
 | `0x1000_1000` | 4 KB | UART |
 | `0x1000_2000` | 4 KB | Timer |
@@ -141,10 +144,12 @@ the core present. This is worth an afternoon and saves weeks.
 | `0x1000_7000` | 4 KB | XADC interface |
 | `0x1000_8000` | 4 KB | Camera capture control |
 | `0x1000_9000` | 4 KB | QSPI weight streamer |
+| `0x1000_F000` | 4 KB | Simulation control (Verilator only) |
 | `0x1001_0000` | 4 KB | **Error counters / FDIR** |
 | `0x1001_1000` | 4 KB | **Watchdog** |
 | `0x1001_2000` | 4 KB | **Scrubber control** |
 | `0x1001_3000` | 4 KB | **SEM IP interface** |
+| `0x1A11_0000` | 64 KB | Debug module (JTAG) |
 
 Bold entries are WP2. Reserve the addresses now so the map does not move later.
 
@@ -315,14 +320,14 @@ results.
 This is the go/no-go. Be strict with yourself; that is the entire point of
 having it.
 
-- [ ] Vivado, GCC, Verilator, FuseSoC all working
-- [ ] Own Verilog blinks an LED on the Boolean Board
-- [ ] `ibex_demo_system` ported; Ibex boots and prints over UART
-- [ ] `riscv-arch-test` passes under RISCOF
-- [ ] CI runs on every push
-- [ ] Bus adapter interface frozen and documented
-- [ ] Memory map allocated, including WP2 addresses
-- [ ] Resource utilisation report — know how much fabric is already gone
+- [x] Vivado, GCC, Verilator, FuseSoC all working
+- [x] Own Verilog blinks an LED on the Boolean Board
+- [x] `ibex_demo_system` ported; Ibex boots and prints over UART
+- [x] `riscv-arch-test` passes under RISCOF
+- [x] CI runs on every push
+- [x] Bus adapter interface frozen and documented
+- [x] Memory map allocated, including WP2 addresses
+- [x] Resource utilisation report — know how much fabric is already gone
 
 If the first four are not done by end of month 2, the project re-scopes or
 stops. That is what the gate is for.

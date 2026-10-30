@@ -35,7 +35,7 @@
     <peripheral>
       <name>UART0</name>
       <version>1</version>
-      <baseAddress>0x80001000</baseAddress>
+      <baseAddress>0x10001000</baseAddress>
       <size>32</size>
       <addressBlock>
         <offset>0</offset>
@@ -100,7 +100,7 @@
     <peripheral>
       <name>SPI0</name>
       <version>1</version>
-      <baseAddress>0x80004000</baseAddress>
+      <baseAddress>0x10004000</baseAddress>
       <size>32</size>
       <addressBlock>
         <offset>0</offset>
@@ -152,7 +152,7 @@
       <name>PWM0</name>
       <version>1</version>
       <description>Simple PWM0</description>
-      <baseAddress>0x80003000</baseAddress>
+      <baseAddress>0x10005000</baseAddress>
       <size>32</size>
       <addressBlock>
         <offset>0</offset>
@@ -286,7 +286,7 @@
       <name>TIMER0</name>
       <version>1</version>
       <description>Controls timer</description>
-      <baseAddress>0x80002000</baseAddress>
+      <baseAddress>0x10002000</baseAddress>
       <size>32</size>
       <addressBlock>
         <offset>0</offset>
@@ -360,7 +360,7 @@
       <name>GPIOA</name>
       <version>1</version>
       <description>Gpio port a</description>
-      <baseAddress>0x80000000</baseAddress>
+      <baseAddress>0x10000000</baseAddress>
       <size>32</size>
       <addressBlock>
         <offset>0</offset>

@@ -19,10 +19,11 @@ module ibex_demo_system #(
   parameter int unsigned        BaudRate       = 115_200,
   parameter ibex_pkg::regfile_e RegFile        = ibex_pkg::RegFileFPGA,
   parameter                     SRAMInitFile   = "",
-  // RAM size and base. The FPGA builds keep the defaults; the compliance
-  // simulation (sim_riscof) uses a larger RAM because some tests exceed 128 KiB.
+  // RAM size and base. The FPGA builds keep the defaults (code and data share
+  // the IRAM window for now); the compliance simulation (sim_riscof) uses a
+  // larger RAM elsewhere because some tests exceed 128 KiB.
   parameter logic [31:0]        MemSize        = 128 * 1024,
-  parameter logic [31:0]        MemStart       = 32'h00100000
+  parameter logic [31:0]        MemStart       = soc_pkg::IRAM_BASE
 ) (
   input  logic clk_sys_i,
   input  logic rst_sys_ni,
@@ -42,38 +43,24 @@ module ibex_demo_system #(
   input  logic        td_i,     // JTAG test data input pad
   output logic        td_o      // JTAG test data output pad
 );
-  localparam logic [31:0] MEM_SIZE      = MemSize;
-  localparam logic [31:0] MEM_START     = MemStart;
-  localparam logic [31:0] MEM_MASK      = ~(MEM_SIZE-1);
+  // Addresses come from soc_pkg, the frozen memory map.
+  localparam logic [31:0] MEM_SIZE       = MemSize;
+  localparam logic [31:0] MEM_START      = MemStart;
+  localparam logic [31:0] MEM_MASK       = ~(MEM_SIZE-1);
 
-  localparam logic [31:0] GPIO_SIZE     =  4 * 1024; //  4 KiB
-  localparam logic [31:0] GPIO_START    = 32'h80000000;
-  localparam logic [31:0] GPIO_MASK     = ~(GPIO_SIZE-1);
+  localparam logic [31:0] PERIPH_MASK    = ~(soc_pkg::PERIPH_SIZE-1);
 
-  localparam logic [31:0] DEBUG_SIZE    = 64 * 1024; // 64 KiB
-  localparam logic [31:0] DEBUG_START   = 32'h1a110000;
-  localparam logic [31:0] DEBUG_MASK    = ~(DEBUG_SIZE-1);
+  localparam logic [31:0] GPIO_START     = soc_pkg::GPIO_BASE;
+  localparam logic [31:0] UART_START     = soc_pkg::UART_BASE;
+  localparam logic [31:0] TIMER_START    = soc_pkg::TIMER_BASE;
+  localparam logic [31:0] PWM_START      = soc_pkg::PWM_BASE;
+  localparam logic [31:0] SPI_START      = soc_pkg::SPI_BASE;
+  localparam logic [31:0] SIM_CTRL_START = soc_pkg::SIM_CTRL_BASE;
 
-  localparam logic [31:0] UART_SIZE     =  4 * 1024; //  4 KiB
-  localparam logic [31:0] UART_START    = 32'h80001000;
-  localparam logic [31:0] UART_MASK     = ~(UART_SIZE-1);
+  localparam logic [31:0] DEBUG_START    = soc_pkg::DEBUG_BASE;
+  localparam logic [31:0] DEBUG_MASK     = ~(soc_pkg::DEBUG_SIZE-1);
 
-  localparam logic [31:0] TIMER_SIZE    =  4 * 1024; //  4 KiB
-  localparam logic [31:0] TIMER_START   = 32'h80002000;
-  localparam logic [31:0] TIMER_MASK    = ~(TIMER_SIZE-1);
-
-  localparam logic [31:0] PWM_SIZE      =  4 * 1024; //  4 KiB
-  localparam logic [31:0] PWM_START     = 32'h80003000;
-  localparam logic [31:0] PWM_MASK      = ~(PWM_SIZE-1);
   localparam int PwmCtrSize = 8;
-
-  parameter logic [31:0] SPI_SIZE       =  1 * 1024; //  1 KiB
-  parameter logic [31:0] SPI_START      = 32'h80004000;
-  parameter logic [31:0] SPI_MASK       = ~(SPI_SIZE-1);
-
-  parameter logic [31:0] SIM_CTRL_SIZE  =  1 * 1024; //  1 KiB
-  parameter logic [31:0] SIM_CTRL_START = 32'h20000;
-  parameter logic [31:0] SIM_CTRL_MASK  = ~(SIM_CTRL_SIZE-1);
 
   // Debug functionality is optional.
   localparam bit DBG = 1;
@@ -157,17 +144,17 @@ module ibex_demo_system #(
   assign cfg_device_addr_base[Ram]     = MEM_START;
   assign cfg_device_addr_mask[Ram]     = MEM_MASK;
   assign cfg_device_addr_base[Gpio]    = GPIO_START;
-  assign cfg_device_addr_mask[Gpio]    = GPIO_MASK;
+  assign cfg_device_addr_mask[Gpio]    = PERIPH_MASK;
   assign cfg_device_addr_base[Pwm]     = PWM_START;
-  assign cfg_device_addr_mask[Pwm]     = PWM_MASK;
+  assign cfg_device_addr_mask[Pwm]     = PERIPH_MASK;
   assign cfg_device_addr_base[Uart]    = UART_START;
-  assign cfg_device_addr_mask[Uart]    = UART_MASK;
+  assign cfg_device_addr_mask[Uart]    = PERIPH_MASK;
   assign cfg_device_addr_base[Timer]   = TIMER_START;
-  assign cfg_device_addr_mask[Timer]   = TIMER_MASK;
+  assign cfg_device_addr_mask[Timer]   = PERIPH_MASK;
   assign cfg_device_addr_base[Spi]     = SPI_START;
-  assign cfg_device_addr_mask[Spi]     = SPI_MASK;
+  assign cfg_device_addr_mask[Spi]     = PERIPH_MASK;
   assign cfg_device_addr_base[SimCtrl] = SIM_CTRL_START;
-  assign cfg_device_addr_mask[SimCtrl] = SIM_CTRL_MASK;
+  assign cfg_device_addr_mask[SimCtrl] = PERIPH_MASK;
 
   if (DBG) begin : g_dbg_device_cfg
     assign cfg_device_addr_base[DbgDev] = DEBUG_START;

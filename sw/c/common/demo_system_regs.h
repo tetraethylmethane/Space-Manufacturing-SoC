@@ -5,17 +5,20 @@
 #ifndef DEMO_SYSTEM_REGS_H__
 #define DEMO_SYSTEM_REGS_H__
 
-#define UART0_BASE 0x80001000
+// Base addresses from the frozen memory map (doc/bus-and-memory-map.md,
+// rtl/system/soc_pkg.sv). Change all three places together.
+#define GPIO_BASE 0x10000000
 
-#define GPIO_BASE 0x80000000
+#define UART0_BASE 0x10001000
 
-#define TIMER_BASE 0x80002000
+#define TIMER_BASE 0x10002000
 
-#define PWM_BASE 0x80003000
+#define SPI0_BASE 0x10004000
 
-#define SPI0_BASE 0x80004000
+#define PWM_BASE 0x10005000
 
-#define SIM_CTRL_BASE 0x20000
+// Verilator only: character output and $finish.
+#define SIM_CTRL_BASE 0x1000F000
 #define SIM_CTRL_OUT 0x0
 #define SIM_CTRL_CTRL 0x8
 
