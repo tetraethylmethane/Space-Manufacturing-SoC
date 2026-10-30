@@ -60,7 +60,7 @@ than a rewrite.
    nothing.
 3. **Memory.** Swap behavioural RAM for Xilinx block RAM. Either infer it with
    the right coding style or instantiate the Block Memory Generator. Budget:
-   **337 KB total on this device** — see Stage 3.
+   **300 KB usable on this device** — see Stage 3.
 4. **Board target.** Add a `boolean` target to the `.core` file, copying the
    Arty target and changing part number to `xc7s50csga324-1`.
 
@@ -175,22 +175,32 @@ miserable.
 
 ### On the BRAM budget
 
-**337 KB total. This is the binding constraint on the whole design.**
+**300 KB usable. This is the binding constraint on the whole design.**
 
-| Item | Size |
-|---|---|
-| Instruction memory | 128 KB |
-| Data memory | 128 KB |
-| Frame buffer, 320×240 greyscale | 75 KB |
-| **Subtotal** | **331 KB** |
+The XC7S50 has 75 block RAM tiles of 36 Kbit. The datasheet's 2.7 Mbit
+(337 KB) counts the parity bits, which hold no data in a 32-bit or 8-bit RAM.
+Each tile therefore stores 4 KB, and 75 tiles store 300 KB. The first build
+confirms it: 128 KB of RAM took 32 tiles.
 
-That is already tight. Consequences:
+| Item | Size | Tiles |
+|---|---|---|
+| Instruction memory | 128 KB | 32 |
+| Data memory | 64 KB | 16 |
+| Frame buffer, 320×240 greyscale | 75 KB | 19 |
+| Spare: FIFOs, line buffers, margin | 32 KB | 8 |
+| **Total** | **300 KB** | **75** |
+
+The data RAM window in the memory map stays 128 KB; only 64 KB of it is
+populated. Consequences:
 
 - **No double buffering** at 320×240. Process each frame as it arrives, or drop
   to 160×120 (19 KB) if you need two buffers.
 - **Model weights stream from QSPI**, layer by layer. They are never resident.
-- Watch what the ECC and scrubber cost when you add them in WP2 — ECC widens
-  every word by ~12%.
+  Activations and stack share the 64 KB data RAM, so size the model to fit.
+- **ECC can live in the parity bits.** The tiles' built-in ECC stores its check
+  bits there in 64-bit mode, at no extra tile cost. A soft code that needs a
+  word wider than 36 bits does cost tiles, so decide in WP2 with the 8 spare
+  tiles in mind.
 
 Measure utilisation after every peripheral. Discovering you are out of BRAM at
 month 8 is a bad way to find out.
@@ -338,7 +348,7 @@ stops. That is what the gate is for.
 
 | Risk | Why | What to do |
 |---|---|---|
-| **BRAM exhaustion** | 337 KB is genuinely small once code, data, frame buffer and ECC overhead are counted | Track utilisation from Stage 3. Drop to 160×120 if needed. |
+| **BRAM exhaustion** | 300 KB usable, and the plan already allocates all of it (32 KB of that is spare) | Track utilisation from Stage 3. Drop to 160×120 (frees 56 KB) if needed. |
 | **Camera capture** | Clock domain crossing plus fiddly SCCB configuration | Leave until last. Start from a known-good register dump. |
 | **Timing closure with lockstep** | Doubling core logic makes routing harder | Start at 25 MHz. Raise only when everything works. |
 | **SEM/ICAP conflict** | SEM owns the primitive exclusively | Decide early; do not plan any other ICAP use. |

@@ -37,7 +37,7 @@ package soc_pkg;
   localparam logic [31:0] IRAM_BASE     = 32'h0000_0000;  // boot address
   localparam logic [31:0] IRAM_SIZE     = 32'h0002_0000;  // 128 KiB
   localparam logic [31:0] DRAM_BASE     = 32'h0002_0000;
-  localparam logic [31:0] DRAM_SIZE     = 32'h0002_0000;  // 128 KiB
+  localparam logic [31:0] DRAM_SIZE     = 32'h0002_0000;  // 128 KiB window, 64 KiB used
   localparam logic [31:0] FBUF_BASE     = 32'h0004_0000;
   localparam logic [31:0] FBUF_SIZE     = 32'h0002_0000;  // 128 KiB window, 75 KiB used
 

@@ -1424,7 +1424,9 @@ injection by hand during bring-up.
 The Boolean Board carries \SI{128}{\mega\bit} of QSPI flash but \emph{no} DDR3,
 unlike the otherwise similar Urbana and Arty~S7 boards. Everything the processor
 executes must therefore live in on-chip block RAM ---
-\SI{2.7}{\mega\bit}, about \SI{337}{\kilo\byte} --- shared between program code,
+75 tiles holding \SI{300}{\kilo\byte} of data (the quoted \SI{2.7}{\mega\bit}
+includes parity bits that a byte- or word-wide memory cannot use) --- shared
+between program code,
 stack, frame buffers and neural-network weights. This is a genuine limit and it
 shapes three decisions:
 
@@ -1441,9 +1443,11 @@ shapes three decisions:
         rather than being resident. This is the standard approach for embedded
         inference on memory-constrained parts.
   \item \textbf{It caps the inspection resolution.} At \(320\times240\)
-        greyscale a frame is \SI{75}{\kilo\byte}, so double-buffering plus code
-        and working weights fits within the \SI{337}{\kilo\byte} budget with
-        room to spare. Higher resolution would not. This is an acceptable
+        greyscale a frame is \SI{75}{\kilo\byte}. One frame,
+        \SI{128}{\kilo\byte} of code and \SI{64}{\kilo\byte} of data and stack
+        fit in the \SI{300}{\kilo\byte}, with \SI{32}{\kilo\byte} left for
+        peripheral buffers. Double-buffering would not fit, so frames are
+        processed as they arrive; higher resolution would not fit either. This is an acceptable
         limit --- published FFF defect classifiers operate at comparable
         resolutions \cite{saluja2020warping} --- but it is a limit, and it is
         recorded as risk R12 rather than discovered later.
@@ -2714,7 +2718,7 @@ Med & Low & Reported as manageable in published low-vacuum FFF work
 have documented low total mass loss \\
 R12 & On-chip memory insufficient for the hardened core plus the inference
 block & Med & Med &
-\SI{337}{\kilo\byte} of block RAM is the hard limit; weights stream from the
+\SI{300}{\kilo\byte} of usable block RAM is the hard limit; weights stream from the
 \SI{16}{\mega\byte} QSPI flash rather than residing in BRAM; inspection capped at
 \(320\times240\), comparable to published FFF classifiers
 \cite{saluja2020warping}; the Nexys A7-100T remains a costed contingency \\

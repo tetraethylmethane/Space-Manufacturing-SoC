@@ -60,7 +60,7 @@ Every window is a power of two and aligned to its size. A device is selected by
 | Base | Size | Block | Status |
 |---|---|---|---|
 | `0x0000_0000` | 128 KiB | Instruction RAM (BRAM); Ibex boots at `0x0000_0080` | Populated, holds code and data for now |
-| `0x0002_0000` | 128 KiB | Data RAM (BRAM) | Reserved |
+| `0x0002_0000` | 128 KiB | Data RAM (BRAM), 64 KiB to be populated | Reserved |
 | `0x0004_0000` | 128 KiB | Frame buffer (BRAM), 75 KiB used for 320×240 greyscale | Reserved |
 | `0x1000_0000` | 4 KiB | GPIO: LEDs, switches, buttons | Populated |
 | `0x1000_1000` | 4 KiB | UART | Populated |
@@ -86,6 +86,11 @@ Notes:
 - **Data and code share the IRAM window for now.** The linker script keeps
   both in the first 128 KiB, with the stack in its top 8 KiB. When the data RAM
   is populated, only `sw/common/link.ld` changes.
+- **Windows are bigger than the memory behind them.** Block RAM gives 300 KB
+  usable (75 tiles of 4 KB; see the build guide). The data RAM gets 64 KiB of
+  its 128 KiB window so that everything fits. Accesses to the unpopulated part
+  of a window are not guaranteed to fault, so firmware must stay inside the
+  populated size.
 - **The frame buffer window is 128 KiB** because a 75 KiB buffer needs a
   power-of-two window. The 53 KiB left over is not backed by memory.
 - **Simulation control** prints characters to the Verilator log (byte write
@@ -101,3 +106,4 @@ Notes:
 | Date | Change | Reason |
 |---|---|---|
 | 30 Oct 2026 | Frozen. Moved from the upstream demo-system layout (RAM at `0x0010_0000`, peripherals at `0x8000_xxxx`) to this map. Frame buffer window widened from 64 KiB to 128 KiB. Simulation control moved to `0x1000_F000`; debug module kept at `0x1A11_0000`. | Month-2 gate. The 64 KiB window could not hold the 75 KiB frame buffer. The old simulation-control address would have landed inside the data RAM. |
+| 30 Oct 2026 | Data RAM to be populated with 64 KiB, not 128 KiB. Addresses unchanged. | Block RAM holds 300 KB of data, not 337 KB (the larger figure counts parity bits). 128 + 128 + 75 KB did not fit. |
