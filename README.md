@@ -24,8 +24,10 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] Ibex running hello-world in Verilator simulation
 - [x] Ibex printing over UART on the Boolean Board (115,200 baud)
 - [x] `riscv-arch-test` 3.9.1 passing under RISCOF against Sail (92/92: I, M, C, Zifencei, privilege)
-- [x] CI running on every push (firmware, simulator, hello-world check)
+- [x] CI running on every push (firmware, simulator, hello-world, block and peripheral tests)
 - [x] Bus interface and memory map frozen ([spec](doc/bus-and-memory-map.md))
+- [x] Timer, PWM and SPI tested: block testbenches and a whole-system firmware test, both in CI ([testing](doc/testing.md))
+- [ ] Timer, PWM and SPI checked on the board
 
 ## Repository layout
 
@@ -33,9 +35,10 @@ Phase 1 of 6, working towards the month-2 review.
 bringup/     small designs for checking the board and tools (start here)
 data/        pin constraints for each supported board
 doc/         project documentation, proposal and upstream notes
-dv/          Verilator testbench; riscof/ holds the compliance setup
+dv/          Verilator testbenches: verilator/ the whole system, blocks/ one
+             peripheral each, riscof/ the compliance setup
 rtl/         SoC RTL: fpga/ holds board top levels, system/ the SoC
-sw/c/        firmware (C), built with CMake
+sw/c/        firmware (C), built with CMake; tests/ holds the peripheral test
 util/        build, programming and helper scripts
 vendor/      vendored lowRISC IP (Ibex, primitives); don't edit directly
 ```
@@ -51,6 +54,7 @@ To run the compliance tests, install RISCOF (`pip install riscof`), put the Sail
 - [Getting started](doc/getting-started.md): setup, build and programming
 - [Build guide](doc/build-guide.md): the staged plan for building and hardening the SoC
 - [Bus interface and memory map](doc/bus-and-memory-map.md): the frozen contract every block is written against
+- [Testing](doc/testing.md): block testbenches, the peripheral test, and what to check on the board
 - [Research proposal](doc/proposal/proposal.pdf), with LaTeX sources in the same folder
 - [Upstream ibex-demo-system README](doc/ibex-demo-system.md)
 

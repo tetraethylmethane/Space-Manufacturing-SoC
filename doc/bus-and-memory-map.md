@@ -96,6 +96,11 @@ Notes:
 - **Simulation control** prints characters to the Verilator log (byte write
   to +0x0) and ends the simulation (write 1 to +0x8). On the FPGA it does
   nothing.
+- **SPI registers:** TX at +0x0 (a write pushes one byte), status at +0x4
+  (bit 0 TX full, bit 1 TX empty, bit 2 RX valid), RX at +0x8 (last byte
+  received; reading it clears RX valid). Mode 0, 12.5 MHz.
+- **PWM registers:** channel *n* has its pulse width at +8*n* and its period
+  (counter maximum) at +8*n*+4, low 8 bits used. Write-only; reads return 0.
 - **The compliance build is the one exception.** The `sim_riscof` target moves
   RAM to `0x0040_0000` with 4 MiB, because some `riscv-arch-test` tests are
   larger than 128 KiB. That address is unmapped in the real map, so the two
@@ -107,3 +112,4 @@ Notes:
 |---|---|---|
 | 30 Oct 2026 | Frozen. Moved from the upstream demo-system layout (RAM at `0x0010_0000`, peripherals at `0x8000_xxxx`) to this map. Frame buffer window widened from 64 KiB to 128 KiB. Simulation control moved to `0x1000_F000`; debug module kept at `0x1A11_0000`. | Month-2 gate. The 64 KiB window could not hold the 75 KiB frame buffer. The old simulation-control address would have landed inside the data RAM. |
 | 30 Oct 2026 | Data RAM to be populated with 64 KiB, not 128 KiB. Addresses unchanged. | Block RAM holds 300 KB of data, not 337 KB (the larger figure counts parity bits). 128 + 128 + 75 KB did not fit. |
+| 31 Oct 2026 | SPI gains an RX register at +0x8 and an RX-valid status bit. Addresses unchanged. | Firmware could only send; the loopback test needs to read back. |

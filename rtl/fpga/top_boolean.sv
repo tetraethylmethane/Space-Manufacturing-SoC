@@ -12,7 +12,10 @@ module top_boolean (
   output [15:0]       LED,
   output [5:0]        RGB_LED,
   input               UART_RX,
-  output              UART_TX
+  output              UART_TX,
+  output              SPI_MOSI,
+  input               SPI_MISO,
+  output              SPI_SCK
 );
   parameter SRAMInitFile = "";
 
@@ -36,9 +39,9 @@ module top_boolean (
     .pwm_o(RGB_LED),
     .uart_tx_o(UART_TX),
 
-    .spi_rx_i(1'b0),
-    .spi_tx_o(),
-    .spi_sck_o(),
+    .spi_rx_i(SPI_MISO),
+    .spi_tx_o(SPI_MOSI),
+    .spi_sck_o(SPI_SCK),
 
     .trst_ni(1'b1),
     .tms_i(),

@@ -9,9 +9,11 @@
 
 #define SPI_TX_REG 0
 #define SPI_STATUS_REG 4
+#define SPI_RX_REG 8
 
 #define SPI_STATUS_TX_FULL 1 << 0
 #define SPI_STATUS_TX_EMPTY 1 << 1
+#define SPI_STATUS_RX_VALID 1 << 2
 #define SPI_FROM_BASE_ADDR(addr) ((spi_reg_t)(addr))
 
 typedef void *spi_reg_t;
@@ -32,5 +34,9 @@ spi_status_t spi_get_status(spi_t *spi);
 
 void spi_wait_idle(spi_t *spi);
 void spi_tx(spi_t *spi, const uint8_t *data, uint32_t len);
+
+// Send one byte and return the byte clocked in while it was sent, or -1 if
+// the transfer did not finish within `timeout` status polls.
+int spi_xfer_byte(spi_t *spi, uint8_t c, uint32_t timeout);
 
 #endif  // SPI_H__

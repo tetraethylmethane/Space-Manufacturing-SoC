@@ -143,13 +143,14 @@ module spi_host #(
           bit_counter_q   <= '0;
           recieved_byte_q <= '0;
           state_q         <= IDLE;
-        // Set current byte half a cycle before transmitting it.
         end else if (sck_pos) begin
-          current_byte_q <= current_byte_d;
           if (state_q == SEND) begin
             recieved_byte_d <= {recieved_byte_q[6:0], spi_rx_i};
           end
+        // Shift the next bit out on the falling edge, half a cycle before the
+        // device samples it. Shifting on the rising edge left zero hold time.
         end else if (sck_neg) begin
+          current_byte_q  <= current_byte_d;
           bit_counter_q   <= bit_counter_d;
           recieved_byte_q <= recieved_byte_d;
           state_q         <= state_d;

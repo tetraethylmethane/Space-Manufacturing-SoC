@@ -62,3 +62,10 @@ set_property -dict {PACKAGE_PIN V5 IOSTANDARD LVCMOS33} [get_ports {RGB_LED[5]}]
 # UART
 set_property -dict {PACKAGE_PIN V12 IOSTANDARD LVCMOS33} [get_ports {UART_RX}]
 set_property -dict {PACKAGE_PIN U11 IOSTANDARD LVCMOS33} [get_ports {UART_TX}]
+
+# SPI on Pmod connector J1, pins 1-3 (schematic sheet 5: JA1_P, JA1_N, JA2_P).
+# Jumper pin 1 to pin 2 for the loopback test. MISO is pulled up, so an open
+# pin reads 0xFF.
+set_property -dict {PACKAGE_PIN B13 IOSTANDARD LVCMOS33} [get_ports {SPI_MOSI}]
+set_property -dict {PACKAGE_PIN A13 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {SPI_MISO}]
+set_property -dict {PACKAGE_PIN B14 IOSTANDARD LVCMOS33} [get_ports {SPI_SCK}]

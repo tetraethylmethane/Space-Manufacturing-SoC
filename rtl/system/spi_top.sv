@@ -31,6 +31,7 @@ module spi_top #(
 
   localparam logic [RegAddr-1:0] SpiTxReg     = RegAddr'('h0);
   localparam logic [RegAddr-1:0] SpiStatusReg = RegAddr'('h4);
+  localparam logic [RegAddr-1:0] SpiRxReg     = RegAddr'('h8);
 
   logic [RegAddr-1:0] reg_addr;
 
@@ -76,7 +77,38 @@ module spi_top #(
       read_status_q  <= read_status_d;
     end
   end
-  assign device_rdata_o = read_status_q ? {(DataWidth-2)'('0), tx_fifo_empty, tx_fifo_full} : DataWidth'('0);
+  // Last received byte, captured when a transfer ends. RX_VALID (status bit 2)
+  // says a byte has arrived since SpiRxReg was last read.
+  logic       read_rx_q, read_rx_d;
+  logic [7:0] rx_byte, rx_q;
+  logic       rx_valid_q;
+
+  assign read_rx_d = (device_req_i & (reg_addr == SpiRxReg) & ~device_we_i);
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      read_rx_q  <= 1'b0;
+      rx_q       <= '0;
+      rx_valid_q <= 1'b0;
+    end else begin
+      read_rx_q <= read_rx_d;
+      if (tx_fifo_rready) begin
+        rx_q       <= rx_byte;
+        rx_valid_q <= 1'b1;
+      end else if (read_rx_d) begin
+        rx_valid_q <= 1'b0;
+      end
+    end
+  end
+
+  always_comb begin
+    device_rdata_o = '0;
+    if (read_status_q) begin
+      device_rdata_o = {(DataWidth-3)'('0), rx_valid_q, tx_fifo_empty, tx_fifo_full};
+    end else if (read_rx_q) begin
+      device_rdata_o = {(DataWidth-8)'('0), rx_q};
+    end
+  end
+  assign byte_data_o = rx_byte;
 
   prim_fifo_sync #(
     .Width ( 8    ),
@@ -115,7 +147,7 @@ module spi_top #(
 
     .start_i       (tx_fifo_rvalid), // Starts SPI as long as we have a valid FIFO data.
     .byte_data_i   (tx_fifo_rdata), // 8-bit data, from FIFO possibly
-    .byte_data_o   (byte_data_o),
+    .byte_data_o   (rx_byte),
     .next_tx_byte_o(next_tx_byte_d) // requests new byte
   );
 

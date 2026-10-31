@@ -13,6 +13,13 @@ module top_verilator #(
 
   logic uart_sys_rx, uart_sys_tx;
 
+  // Test loopbacks: SPI MOSI drives MISO, and PWM channels 0-7 drive the GPIO
+  // inputs so firmware can measure duty cycle (sw/c/tests/periph_test).
+  logic        spi_loop;
+  logic [11:0] pwm;
+  logic        unused_pwm;
+  assign unused_pwm = ^pwm[11:8];
+
   // Instantiating the Ibex Demo System.
   ibex_demo_system #(
     .GpiWidth       ( 8                   ),
@@ -40,11 +47,11 @@ module top_verilator #(
     .td_o   (    ),
 
     // Remaining IO
-    .gp_i      (0),
+    .gp_i      (pwm[7:0]),
     .gp_o      ( ),
-    .pwm_o     ( ),
-    .spi_rx_i  (0),
-    .spi_tx_o  ( ),
+    .pwm_o     (pwm),
+    .spi_rx_i  (spi_loop),
+    .spi_tx_o  (spi_loop),
     .spi_sck_o ( )
   );
 

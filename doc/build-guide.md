@@ -161,6 +161,13 @@ Each is a small module with its own Verilator testbench. Write the testbench
 first — not for purity, but because debugging a peripheral through the core is
 miserable.
 
+**Status (31 Oct 2026):** the timer, PWM and SPI master from the demo system
+pass their block testbenches (`dv/blocks`) and the whole-system peripheral
+test (`sw/c/tests/periph_test`), both in CI. The SPI testbench found that MOSI
+changed on the rising SCK edge, which left a mode-0 device no hold time; that
+is fixed. SPI also gained an RX register so firmware can read back. Board check
+pending. See [testing.md](testing.md) for how to run each level.
+
 | Order | Module | Drives | Difficulty |
 |---|---|---|---|
 | 1 | GPIO | LEDs, switches | Trivial — proves the bus |

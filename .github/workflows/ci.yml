@@ -1,7 +1,9 @@
 name: CI
 
-# Builds the firmware and the Verilator model, runs hello-world in simulation
-# and fails unless the simulated UART prints it.
+# Builds the firmware and the Verilator model, then runs:
+# - the block testbenches (timer, PWM, SPI) in dv/blocks;
+# - hello-world, which must print over the simulated UART;
+# - the peripheral test (sw/c/tests/periph_test), which must report ALL PASS.
 
 on:
   push:
@@ -10,6 +12,21 @@ on:
     branches: [main]
 
 jobs:
+  blocks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+          verilator --version
+
+      - name: Run block testbenches
+        run: bash util/run_block_tests.sh
+
   sim:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -46,3 +63,8 @@ jobs:
         run: |
           bash util/run_sim.sh
           grep -q "Hello World" "$HOME"/space-am-soc-sim/run/*.log
+
+      - name: Run peripheral test
+        run: |
+          bash util/run_sim.sh sw/c/build/tests/periph_test_sim 300
+          grep -q "periph_test: ALL PASS" "$HOME"/space-am-soc-sim/run/uart0.log

@@ -25,6 +25,18 @@ void spi_wait_idle(spi_t *spi) {
   while ((spi_get_status(spi) & spi_status_fifo_empty) != spi_status_fifo_empty);
 }
 
+int spi_xfer_byte(spi_t *spi, uint8_t c, uint32_t timeout) {
+  spi_wait_idle(spi);
+  (void)DEV_READ(spi->reg + SPI_RX_REG);  // clear any stale RX_VALID
+  DEV_WRITE(spi->reg + SPI_TX_REG, c);
+  while (!(DEV_READ(spi->reg + SPI_STATUS_REG) & SPI_STATUS_RX_VALID)) {
+    if (timeout-- == 0) {
+      return -1;
+    }
+  }
+  return DEV_READ(spi->reg + SPI_RX_REG) & 0xFF;
+}
+
 void spi_tx(spi_t *spi, const uint8_t *data, uint32_t len) {
   spi_wait_idle(spi);
   while (len--) {
