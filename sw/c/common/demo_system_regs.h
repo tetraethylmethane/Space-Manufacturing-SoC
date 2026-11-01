@@ -19,6 +19,8 @@
 
 #define PWM_BASE 0x10005000
 
+#define XADC_BASE 0x10007000
+
 // Verilator only: character output and $finish.
 #define SIM_CTRL_BASE 0x1000F000
 #define SIM_CTRL_OUT 0x0

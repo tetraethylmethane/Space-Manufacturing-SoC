@@ -1,18 +1,19 @@
-// Peripheral test: timer, PWM, SPI and I2C, run on the whole system.
+// Peripheral test: timer, PWM, SPI, I2C and XADC, run on the whole system.
 //
 // Prints "PASS <block>" or "FAIL <block>: <reason>" per block over the UART,
 // then "periph_test: ALL PASS" or "periph_test: FAILED".
 //
 // The simulation build (periph_test_sim) relies on the loopbacks in
 // dv/verilator/top_verilator.sv: SPI MOSI drives MISO, PWM channels 0-7
-// drive the GPIO inputs, and an EEPROM-like I2C target answers at 0x50. It
+// drive the GPIO inputs, an EEPROM-like I2C target answers at 0x50, and an
+// XADC model returns fixed readings (45.0 C, 1.00 V, 1.80 V, 1.00 V). It
 // halts the simulator when done.
 //
 // The board build (periph_test) needs a jumper from Pmod J1 pin 1 (MOSI) to
 // pin 2 (MISO). It skips the PWM measurement (the GPIO inputs are switches
 // there). With nothing on the I2C pins it only checks that an empty address
-// gets no ACK, which fails if SCL or SDA is stuck low. Afterwards it keeps
-// running: the timer interrupt toggles LED 4
+// gets no ACK, which fails if SCL or SDA is stuck low. The XADC readings must
+// be within the Spartan-7 operating ranges. Afterwards it keeps running: the timer interrupt toggles LED 4
 // once a second and prints the tick count, and the RGB LEDs fade.
 
 #include <stdbool.h>
@@ -23,6 +24,7 @@
 #include "pwm.h"
 #include "spi.h"
 #include "timer.h"
+#include "xadc.h"
 
 static int failures;
 
@@ -248,6 +250,54 @@ static void test_i2c(void) {
   if (failures == before) pass("i2c");
 }
 
+// ----------------------------------------------------------------- XADC ---
+
+static void check_range(const char *what, int32_t v, int32_t lo, int32_t hi) {
+  if (v < lo || v > hi) fail("xadc", what, (uint32_t)v, (uint32_t)lo);
+}
+
+static void test_xadc(void) {
+  int before = failures;
+
+  // Wait for two fresh passes so every register holds a real sample.
+  uint32_t s0 = xadc_scans(XADC_BASE), n = 0;
+  while (xadc_scans(XADC_BASE) - s0 < 2) {
+    if (++n > 100000) {
+      fail("xadc", "SCANS not counting", xadc_scans(XADC_BASE), s0 + 2);
+      return;
+    }
+  }
+
+  int32_t t = xadc_temp_mc(XADC_BASE);
+  uint32_t vint = xadc_supply_mv(XADC_BASE, XADC_VCCINT);
+  uint32_t vaux = xadc_supply_mv(XADC_BASE, XADC_VCCAUX);
+  uint32_t vbram = xadc_supply_mv(XADC_BASE, XADC_VCCBRAM);
+#ifdef PERIPH_TEST_SIM
+  // The model's fixed readings, through the conversion formulas.
+  check_range("temperature (mC)", t, 44500, 45500);
+  check_range("VCCINT (mV)", vint, 995, 1005);
+  check_range("VCCAUX (mV)", vaux, 1795, 1805);
+  check_range("VCCBRAM (mV)", vbram, 995, 1005);
+#else
+  // Spartan-7 recommended ranges (VCCINT and VCCBRAM 1.0 V, VCCAUX 1.8 V,
+  // each +-5 %); the die should be between room temperature and 85 C.
+  check_range("temperature (mC)", t, 10000, 85000);
+  check_range("VCCINT (mV)", vint, 950, 1050);
+  check_range("VCCAUX (mV)", vaux, 1710, 1890);
+  check_range("VCCBRAM (mV)", vbram, 950, 1050);
+#endif
+  puts("xadc: ");
+  putdec(t / 1000);
+  puts(" C, VCCINT ");
+  putdec(vint);
+  puts(" mV, VCCAUX ");
+  putdec(vaux);
+  puts(" mV, VCCBRAM ");
+  putdec(vbram);
+  puts(" mV\n");
+  if (failures == before) pass("xadc");
+}
+
 // ----------------------------------------------------------------- main ---
 
 int main(void) {
@@ -258,6 +308,7 @@ int main(void) {
 #endif
   test_spi();
   test_i2c();
+  test_xadc();
   puts(failures ? "periph_test: FAILED\n" : "periph_test: ALL PASS\n");
 
 #ifdef PERIPH_TEST_SIM

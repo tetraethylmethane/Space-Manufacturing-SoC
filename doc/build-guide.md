@@ -171,8 +171,10 @@ is fixed. SPI also gained an RX register so firmware can read back.
 mode-0 fix above was not in the chip; it is now mode 0. The I²C master is
 written (`rtl/system/i2c_host.sv`) and passes its block testbench against two
 target models, one stretching the clock, and the whole-system test against a
-model at 0x50. It is pinned to the second row of Pmod J1. Board check pending
-for all four blocks. See [testing.md](testing.md) for how to run each level.
+model at 0x50. It is pinned to the second row of Pmod J1. The XADC interface
+(`rtl/system/xadc_host.sv`) reads die temperature and the three supplies into
+shadow registers; simulation swaps the XADC primitive for a model. Board check
+pending for all five blocks. See [testing.md](testing.md) for how to run each level.
 
 | Order | Module | Drives | Difficulty |
 |---|---|---|---|

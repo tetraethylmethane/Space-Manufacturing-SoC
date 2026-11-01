@@ -12,6 +12,7 @@
 // - Debug module.
 // - SPI for driving LCD screen.
 // - I2C controller for sensors.
+// - XADC: die temperature and supply voltages.
 module ibex_demo_system #(
   parameter int                 GpiWidth       = 8,
   parameter int                 GpoWidth       = 16,
@@ -62,6 +63,7 @@ module ibex_demo_system #(
   localparam logic [31:0] PWM_START      = soc_pkg::PWM_BASE;
   localparam logic [31:0] SPI_START      = soc_pkg::SPI_BASE;
   localparam logic [31:0] I2C_START      = soc_pkg::I2C_BASE;
+  localparam logic [31:0] XADC_START     = soc_pkg::XADC_BASE;
   localparam logic [31:0] SIM_CTRL_START = soc_pkg::SIM_CTRL_BASE;
 
   localparam logic [31:0] DEBUG_START    = soc_pkg::DEBUG_BASE;
@@ -87,11 +89,12 @@ module ibex_demo_system #(
     Timer,
     Spi,
     I2c,
+    Xadc,
     SimCtrl,
     DbgDev
   } bus_device_e;
 
-  localparam int NrDevices = DBG ? 9 : 8;
+  localparam int NrDevices = DBG ? 10 : 9;
   localparam int NrHosts   = DBG ? 2 : 1;
 
   // Interrupts.
@@ -163,6 +166,8 @@ module ibex_demo_system #(
   assign cfg_device_addr_mask[Spi]     = PERIPH_MASK;
   assign cfg_device_addr_base[I2c]     = I2C_START;
   assign cfg_device_addr_mask[I2c]     = PERIPH_MASK;
+  assign cfg_device_addr_base[Xadc]    = XADC_START;
+  assign cfg_device_addr_mask[Xadc]    = PERIPH_MASK;
   assign cfg_device_addr_base[SimCtrl] = SIM_CTRL_START;
   assign cfg_device_addr_mask[SimCtrl] = PERIPH_MASK;
 
@@ -179,6 +184,7 @@ module ibex_demo_system #(
   assign device_err[Uart]    = 1'b0;
   assign device_err[Spi]     = 1'b0;
   assign device_err[I2c]     = 1'b0;
+  assign device_err[Xadc]    = 1'b0;
   assign device_err[SimCtrl] = 1'b0;
 
   bus #(
@@ -420,6 +426,78 @@ module ibex_demo_system #(
     .sda_i   (i2c_sda_i),
     .sda_oe_o(i2c_sda_oe_o)
   );
+
+  logic        xadc_den, xadc_drdy;
+  logic [6:0]  xadc_daddr;
+  logic [15:0] xadc_do;
+
+  xadc_host u_xadc (
+    .clk_i (clk_sys_i),
+    .rst_ni(rst_sys_ni),
+
+    .device_req_i   (device_req[Xadc]),
+    .device_addr_i  (device_addr[Xadc]),
+    .device_we_i    (device_we[Xadc]),
+    .device_be_i    (device_be[Xadc]),
+    .device_wdata_i (device_wdata[Xadc]),
+    .device_rvalid_o(device_rvalid[Xadc]),
+    .device_rdata_o (device_rdata[Xadc]),
+
+    .drp_en_o  (xadc_den),
+    .drp_addr_o(xadc_daddr),
+    .drp_rdy_i (xadc_drdy),
+    .drp_do_i  (xadc_do)
+  );
+
+  `ifdef VERILATOR
+    // No XADC in simulation: a model answers the DRP reads.
+    xadc_model u_xadc_model (
+      .clk_i  (clk_sys_i),
+      .rst_ni (rst_sys_ni),
+      .den_i  (xadc_den),
+      .daddr_i(xadc_daddr),
+      .drdy_o (xadc_drdy),
+      .do_o   (xadc_do)
+    );
+  `else
+    // Continuous sequence over calibration, temperature, VCCINT, VCCAUX,
+    // VP/VN and VCCBRAM, with all calibration corrections on. ADCCLK is DCLK/4
+    // (12.5 MHz from 50 MHz). The over-temperature alarm stays enabled; the
+    // other alarms have no thresholds set and are disabled. Bit positions are
+    // those of the Vivado XADC wizard (xadc_wiz_v3_3).
+    XADC #(
+      .INIT_40(16'h0000),  // no averaging
+      .INIT_41(16'h21FE),  // continuous sequence, CAL0-3, ALM0-3 off, OT on
+      .INIT_42(16'h0400),  // DCLK divide by 4
+      .INIT_48(16'h4F01),  // CAL, TEMP, VCCINT, VCCAUX, VP/VN, VCCBRAM
+      .INIT_49(16'h0000)   // no auxiliary channels
+    ) u_xadc_prim (
+      .DCLK        (clk_sys_i),
+      .RESET       (~rst_sys_ni),
+      .DEN         (xadc_den),
+      .DWE         (1'b0),
+      .DADDR       (xadc_daddr),
+      .DI          (16'h0),
+      .DO          (xadc_do),
+      .DRDY        (xadc_drdy),
+      .VP          (1'b0),
+      .VN          (1'b0),
+      .VAUXP       (16'h0),
+      .VAUXN       (16'h0),
+      .CONVST      (1'b0),
+      .CONVSTCLK   (1'b0),
+      .ALM         (),
+      .OT          (),
+      .MUXADDR     (),
+      .CHANNEL     (),
+      .EOC         (),
+      .EOS         (),
+      .BUSY        (),
+      .JTAGBUSY    (),
+      .JTAGLOCKED  (),
+      .JTAGMODIFIED()
+    );
+  `endif
 
   `ifdef VERILATOR
     simulator_ctrl #(

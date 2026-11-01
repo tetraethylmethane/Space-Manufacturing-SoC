@@ -22,6 +22,7 @@ filesets:
       - rtl/system/spi_host.sv
       - rtl/system/spi_top.sv
       - rtl/system/i2c_host.sv
+      - rtl/system/xadc_host.sv
     file_type: systemVerilogSource
 
 targets:
