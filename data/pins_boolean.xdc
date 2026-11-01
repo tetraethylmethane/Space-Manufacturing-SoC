@@ -69,3 +69,9 @@ set_property -dict {PACKAGE_PIN U11 IOSTANDARD LVCMOS33} [get_ports {UART_TX}]
 set_property -dict {PACKAGE_PIN B13 IOSTANDARD LVCMOS33} [get_ports {SPI_MOSI}]
 set_property -dict {PACKAGE_PIN A13 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {SPI_MISO}]
 set_property -dict {PACKAGE_PIN B14 IOSTANDARD LVCMOS33} [get_ports {SPI_SCK}]
+
+# I2C on Pmod connector J1, second row, opposite SPI pins 1 and 2 (schematic
+# sheet 5: JA3_P, JA3_N; sheet 11: E12, D12). The internal pull-ups are weak;
+# fit 4.7k pull-ups to 3.3 V when a real device is connected.
+set_property -dict {PACKAGE_PIN E12 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {I2C_SCL}]
+set_property -dict {PACKAGE_PIN D12 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {I2C_SDA}]

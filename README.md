@@ -27,7 +27,8 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] CI running on every push (firmware, simulator, hello-world, block and peripheral tests)
 - [x] Bus interface and memory map frozen ([spec](doc/bus-and-memory-map.md))
 - [x] Timer, PWM and SPI tested: block testbenches and a whole-system firmware test, both in CI ([testing](doc/testing.md))
-- [ ] Timer, PWM and SPI checked on the board
+- [x] I²C master written and tested the same way, with clock stretching
+- [ ] Timer, PWM, SPI and I²C checked on the board
 
 ## Repository layout
 

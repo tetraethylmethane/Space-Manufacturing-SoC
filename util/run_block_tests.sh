@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build and run the block testbenches in dv/blocks with Verilator.
-# Usage: run_block_tests.sh [timer|pwm|spi ...]   (default: all)
+# Usage: run_block_tests.sh [timer|pwm|spi|i2c ...]   (default: all)
 # Exits non-zero if any testbench fails to build or does not print PASS.
 set -uo pipefail
 repo="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,11 +11,12 @@ common=("$repo/rtl/system/soc_pkg.sv")
 declare -A srcs=(
   [timer]="$repo/vendor/lowrisc_ibex/shared/rtl/timer.sv"
   [pwm]="$repo/rtl/system/pwm.sv $repo/rtl/system/pwm_wrapper.sv"
+  [i2c]="$repo/rtl/system/i2c_host.sv $repo/dv/blocks/i2c_target.sv"
   [spi]="$prim/prim_util_pkg.sv $prim/prim_count_pkg.sv $prim/prim_count.sv $prim/prim_fifo_sync_cnt.sv $prim/prim_fifo_sync.sv $repo/rtl/system/spi_host.sv $repo/rtl/system/spi_top.sv"
 )
 
 blocks=("$@")
-[ ${#blocks[@]} -eq 0 ] && blocks=(timer pwm spi)
+[ ${#blocks[@]} -eq 0 ] && blocks=(timer pwm spi i2c)
 
 failed=0
 for b in "${blocks[@]}"; do

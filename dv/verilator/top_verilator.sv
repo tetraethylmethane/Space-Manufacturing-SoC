@@ -14,11 +14,25 @@ module top_verilator #(
   logic uart_sys_rx, uart_sys_tx;
 
   // Test loopbacks: SPI MOSI drives MISO, and PWM channels 0-7 drive the GPIO
-  // inputs so firmware can measure duty cycle (sw/c/tests/periph_test).
+  // inputs so firmware can measure duty cycle (sw/c/tests/periph_test). An
+  // EEPROM-like I2C target answers at 0x50 on an open-drain bus.
   logic        spi_loop;
   logic [11:0] pwm;
   logic        unused_pwm;
   assign unused_pwm = ^pwm[11:8];
+
+  logic i2c_scl_oe, i2c_sda_oe, tgt_scl_low, tgt_sda_low, i2c_scl, i2c_sda;
+  assign i2c_scl = ~(i2c_scl_oe | tgt_scl_low);
+  assign i2c_sda = ~(i2c_sda_oe | tgt_sda_low);
+
+  i2c_target #(.Addr(7'h50)) u_i2c_target (
+    .clk_i,
+    .rst_ni,
+    .scl_i    (i2c_scl),
+    .sda_i    (i2c_sda),
+    .scl_low_o(tgt_scl_low),
+    .sda_low_o(tgt_sda_low)
+  );
 
   // Instantiating the Ibex Demo System.
   ibex_demo_system #(
@@ -52,7 +66,11 @@ module top_verilator #(
     .pwm_o     (pwm),
     .spi_rx_i  (spi_loop),
     .spi_tx_o  (spi_loop),
-    .spi_sck_o ( )
+    .spi_sck_o ( ),
+    .i2c_scl_i   (i2c_scl),
+    .i2c_scl_oe_o(i2c_scl_oe),
+    .i2c_sda_i   (i2c_sda),
+    .i2c_sda_oe_o(i2c_sda_oe)
   );
 
   // Virtual UART

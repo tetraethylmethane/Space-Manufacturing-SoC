@@ -21,13 +21,14 @@ Needs Verilator 5 (uses `--binary --timing`). Takes about a minute.
 | Timer | `mtime` counts one per cycle; register read-back and byte writes; the interrupt fires when `mtime` reaches `mtimecmp`, stays set until `mtimecmp` is written, and respects the high word; carry into `mtimeh`; `err` on unmapped offsets |
 | PWM | All 12 channels: high time and period exact over a long window, for 0 %, 25 %, 50 %, full and over-range widths, `max = 0` (off) and periods from 2 to 256 cycles; channels independent; upper bits ignored |
 | SPI | Idle levels (mode 0); SCK at 4 clocks per bit; MSB first; MOSI never changes on a rising SCK edge; 200-byte burst through the FIFO arrives intact and in order; TX full and empty flags; loopback read-back through the RX register |
+| I²C | Against two target models on one bus (`i2c_target.sv`, EEPROM-like, one of them stretching the clock): reset rate 100 kHz or slower; SCL period, high and low phases; SDA setup before SCL rises and no change as SCL falls; START, repeated START and STOP seen on the wires; multi-byte write and read-back; NACK reported for an empty address and cleared by the next command; clock stretching waited out; commands while busy dropped |
 
 ## 2. Peripheral test in simulation
 
 `sw/c/tests/periph_test` exercises the same blocks through the core, with
 interrupts and the real drivers. The Verilator top level loops SPI MOSI back to
-MISO and feeds PWM channels 0–7 into the GPIO inputs so the firmware can
-measure them.
+MISO, feeds PWM channels 0–7 into the GPIO inputs so the firmware can
+measure them, and puts the I²C target model at address 0x50.
 
 ```bash
 bash util/build_sw.sh && bash util/build_sim.sh
@@ -42,6 +43,7 @@ The UART log (`~/space-am-soc-sim/run/uart0.log`) ends with
 | Timer | `mtime` and `mcycle` agree; ten timer interrupts 5,000 cycles apart (±50); `mcause` correct; no interrupt while masked, and the pending one is taken when unmasked |
 | PWM | Duty cycle of channels 0–7 measured by sampling the GPIO inputs, within 2 % |
 | SPI | Bytes 0–255 sent and read back over the loopback |
+| I²C | At 400 kHz: an empty address gets NACK; four bytes written to 0x50 and read back with a repeated START; the next byte still holds the model's fill pattern |
 
 ## 3. On the board
 
@@ -56,11 +58,15 @@ bash util/setup_synth_boolean.sh sw/c/build/tests/periph_test.vmem   # WSL
 ```
 
 Put a jumper between pins 1 and 2 of Pmod connector J1 (MOSI to MISO). SCK is
-on pin 3 if you want to look at it with a scope. Then open the UART at
+on pin 3 if you want to look at it with a scope. I²C is on the second row of
+J1, opposite pins 1 and 2 (SCL opposite pin 1, SDA opposite pin 2); leave it
+unconnected. Then open the UART at
 115,200 baud and press reset. Expected:
 
-- `PASS timer` and `PASS spi`, then `periph_test: ALL PASS`. Without the
-  jumper, SPI fails with "no byte back" or wrong bytes.
+- `PASS timer`, `PASS spi` and `PASS i2c`, then `periph_test: ALL PASS`.
+  Without the jumper, SPI fails with "no byte back" or wrong bytes. With no
+  device connected, I²C only checks that an empty address gets no ACK; that
+  fails if either line is stuck low.
 - `tick 1`, `tick 2`, … once a second, with LED 4 toggling on each tick.
 - Both RGB LEDs fading, in opposite directions.
 

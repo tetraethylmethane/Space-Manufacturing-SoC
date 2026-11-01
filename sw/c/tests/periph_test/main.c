@@ -1,21 +1,25 @@
-// Peripheral test: timer, PWM and SPI, run on the whole system.
+// Peripheral test: timer, PWM, SPI and I2C, run on the whole system.
 //
 // Prints "PASS <block>" or "FAIL <block>: <reason>" per block over the UART,
 // then "periph_test: ALL PASS" or "periph_test: FAILED".
 //
 // The simulation build (periph_test_sim) relies on the loopbacks in
-// dv/verilator/top_verilator.sv: SPI MOSI drives MISO, and PWM channels 0-7
-// drive the GPIO inputs. It halts the simulator when done.
+// dv/verilator/top_verilator.sv: SPI MOSI drives MISO, PWM channels 0-7
+// drive the GPIO inputs, and an EEPROM-like I2C target answers at 0x50. It
+// halts the simulator when done.
 //
 // The board build (periph_test) needs a jumper from Pmod J1 pin 1 (MOSI) to
 // pin 2 (MISO). It skips the PWM measurement (the GPIO inputs are switches
-// there) and afterwards keeps running: the timer interrupt toggles LED 4
+// there). With nothing on the I2C pins it only checks that an empty address
+// gets no ACK, which fails if SCL or SDA is stuck low. Afterwards it keeps
+// running: the timer interrupt toggles LED 4
 // once a second and prints the tick count, and the RGB LEDs fade.
 
 #include <stdbool.h>
 
 #include "demo_system.h"
 #include "dev_access.h"
+#include "i2c.h"
 #include "pwm.h"
 #include "spi.h"
 #include "timer.h"
@@ -214,6 +218,36 @@ static void test_spi(void) {
   if (failures == before) pass("spi");
 }
 
+// ------------------------------------------------------------------ I2C ---
+
+#define I2C_EEPROM 0x50  // simulation target
+#define I2C_NOBODY 0x31  // no device at this address in sim or on the board
+
+static void test_i2c(void) {
+  int before = failures;
+  i2c_init(I2C_BASE, I2C_PRESCALE(SYSCLK_FREQ, 400000));
+
+  uint8_t buf[5];
+  int err = i2c_write(I2C_BASE, I2C_NOBODY, buf, 0);
+  if (err != I2C_ERR_NACK) fail("i2c", "empty address was ACKed (SDA stuck low?)", err, I2C_ERR_NACK);
+
+#ifdef PERIPH_TEST_SIM
+  // Pointer 0x40, then four data bytes; read them back with a repeated START.
+  const uint8_t out[5] = {0x40, 0xDE, 0xAD, 0xBE, 0xEF};
+  err = i2c_write(I2C_BASE, I2C_EEPROM, out, 5);
+  if (err) fail("i2c", "write to 0x50", err, 0);
+  err = i2c_read_reg(I2C_BASE, I2C_EEPROM, 0x40, buf, 4);
+  if (err) fail("i2c", "read from 0x50", err, 0);
+  for (int i = 0; i < 4 && !err; i++) {
+    if (buf[i] != out[i + 1]) fail("i2c", "read-back byte differs", buf[i], out[i + 1]);
+  }
+  // The byte after the written ones still holds the target's fill pattern.
+  err = i2c_read_reg(I2C_BASE, I2C_EEPROM, 0x44, buf, 1);
+  if (err || buf[0] != (0x44 ^ 0x5A)) fail("i2c", "pattern byte at 0x44", buf[0], 0x44 ^ 0x5A);
+#endif
+  if (failures == before) pass("i2c");
+}
+
 // ----------------------------------------------------------------- main ---
 
 int main(void) {
@@ -223,6 +257,7 @@ int main(void) {
   test_pwm();
 #endif
   test_spi();
+  test_i2c();
   puts(failures ? "periph_test: FAILED\n" : "periph_test: ALL PASS\n");
 
 #ifdef PERIPH_TEST_SIM

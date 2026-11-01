@@ -65,7 +65,7 @@ Every window is a power of two and aligned to its size. A device is selected by
 | `0x1000_0000` | 4 KiB | GPIO: LEDs, switches, buttons | Populated |
 | `0x1000_1000` | 4 KiB | UART | Populated |
 | `0x1000_2000` | 4 KiB | Timer (`mtime` at +0x0, `mtimecmp` at +0x8) | Populated |
-| `0x1000_3000` | 4 KiB | I²C master | Reserved |
+| `0x1000_3000` | 4 KiB | I²C master | Populated |
 | `0x1000_4000` | 4 KiB | SPI master | Populated |
 | `0x1000_5000` | 4 KiB | PWM (heaters) | Populated |
 | `0x1000_6000` | 4 KiB | Step/dir motion | Reserved |
@@ -99,6 +99,13 @@ Notes:
 - **SPI registers:** TX at +0x0 (a write pushes one byte), status at +0x4
   (bit 0 TX full, bit 1 TX empty, bit 2 RX valid), RX at +0x8 (last byte
   received; reading it clears RX valid). Mode 0, 12.5 MHz.
+- **I²C registers:** prescale at +0x0 (system clocks per quarter SCL period;
+  reset 125 = 100 kHz, 31 ≈ 400 kHz), command at +0x4, status at +0x8
+  (bit 0 busy, bit 1 NACK), RX at +0xC (last byte read). A command is
+  START, then WRITE (bits 7:0) or READ, then STOP, each one optional: bit 8
+  START, bit 9 STOP, bit 10 WRITE, bit 11 READ, bit 12 NACK the byte read.
+  Commands written while busy are dropped. Clock stretching is supported;
+  multi-master arbitration is not.
 - **PWM registers:** channel *n* has its pulse width at +8*n* and its period
   (counter maximum) at +8*n*+4, low 8 bits used. Write-only; reads return 0.
 - **The compliance build is the one exception.** The `sim_riscof` target moves
@@ -113,3 +120,4 @@ Notes:
 | 30 Oct 2026 | Frozen. Moved from the upstream demo-system layout (RAM at `0x0010_0000`, peripherals at `0x8000_xxxx`) to this map. Frame buffer window widened from 64 KiB to 128 KiB. Simulation control moved to `0x1000_F000`; debug module kept at `0x1A11_0000`. | Month-2 gate. The 64 KiB window could not hold the 75 KiB frame buffer. The old simulation-control address would have landed inside the data RAM. |
 | 30 Oct 2026 | Data RAM to be populated with 64 KiB, not 128 KiB. Addresses unchanged. | Block RAM holds 300 KB of data, not 337 KB (the larger figure counts parity bits). 128 + 128 + 75 KB did not fit. |
 | 31 Oct 2026 | SPI gains an RX register at +0x8 and an RX-valid status bit. Addresses unchanged. | Firmware could only send; the loopback test needs to read back. |
+| 1 Nov 2026 | I²C master populated at its reserved address. SPI instance set to mode 0 (it was built as mode 1). | First sensor bus. The SPI block test and its timing fix cover mode 0, but the system used mode 1. |

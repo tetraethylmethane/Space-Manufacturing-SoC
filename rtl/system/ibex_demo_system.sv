@@ -11,6 +11,7 @@
 // - Timer.
 // - Debug module.
 // - SPI for driving LCD screen.
+// - I2C controller for sensors.
 module ibex_demo_system #(
   parameter int                 GpiWidth       = 8,
   parameter int                 GpoWidth       = 16,
@@ -36,6 +37,11 @@ module ibex_demo_system #(
   input  logic                spi_rx_i,
   output logic                spi_tx_o,
   output logic                spi_sck_o,
+  // I2C, open drain: *_oe_o high pulls the line low.
+  input  logic                i2c_scl_i,
+  output logic                i2c_scl_oe_o,
+  input  logic                i2c_sda_i,
+  output logic                i2c_sda_oe_o,
 
   input  logic        tck_i,    // JTAG test clock pad
   input  logic        tms_i,    // JTAG test mode select pad
@@ -55,6 +61,7 @@ module ibex_demo_system #(
   localparam logic [31:0] TIMER_START    = soc_pkg::TIMER_BASE;
   localparam logic [31:0] PWM_START      = soc_pkg::PWM_BASE;
   localparam logic [31:0] SPI_START      = soc_pkg::SPI_BASE;
+  localparam logic [31:0] I2C_START      = soc_pkg::I2C_BASE;
   localparam logic [31:0] SIM_CTRL_START = soc_pkg::SIM_CTRL_BASE;
 
   localparam logic [31:0] DEBUG_START    = soc_pkg::DEBUG_BASE;
@@ -79,11 +86,12 @@ module ibex_demo_system #(
     Uart,
     Timer,
     Spi,
+    I2c,
     SimCtrl,
     DbgDev
   } bus_device_e;
 
-  localparam int NrDevices = DBG ? 8 : 7;
+  localparam int NrDevices = DBG ? 9 : 8;
   localparam int NrHosts   = DBG ? 2 : 1;
 
   // Interrupts.
@@ -153,6 +161,8 @@ module ibex_demo_system #(
   assign cfg_device_addr_mask[Timer]   = PERIPH_MASK;
   assign cfg_device_addr_base[Spi]     = SPI_START;
   assign cfg_device_addr_mask[Spi]     = PERIPH_MASK;
+  assign cfg_device_addr_base[I2c]     = I2C_START;
+  assign cfg_device_addr_mask[I2c]     = PERIPH_MASK;
   assign cfg_device_addr_base[SimCtrl] = SIM_CTRL_START;
   assign cfg_device_addr_mask[SimCtrl] = PERIPH_MASK;
 
@@ -168,6 +178,7 @@ module ibex_demo_system #(
   assign device_err[Pwm]     = 1'b0;
   assign device_err[Uart]    = 1'b0;
   assign device_err[Spi]     = 1'b0;
+  assign device_err[I2c]     = 1'b0;
   assign device_err[SimCtrl] = 1'b0;
 
   bus #(
@@ -372,7 +383,7 @@ module ibex_demo_system #(
   spi_top #(
     .ClockFrequency ( ClockFrequency ),
     .CPOL           ( 0          ),
-    .CPHA           ( 1          )
+    .CPHA           ( 0          )  // mode 0, the mode the block test covers
   ) u_spi (
     .clk_i (clk_sys_i),
     .rst_ni(rst_sys_ni),
@@ -390,6 +401,24 @@ module ibex_demo_system #(
     .sck_o   (spi_sck_o), // Serial clock pin.
 
     .byte_data_o() // Unused.
+  );
+
+  i2c_host u_i2c (
+    .clk_i (clk_sys_i),
+    .rst_ni(rst_sys_ni),
+
+    .device_req_i   (device_req[I2c]),
+    .device_addr_i  (device_addr[I2c]),
+    .device_we_i    (device_we[I2c]),
+    .device_be_i    (device_be[I2c]),
+    .device_wdata_i (device_wdata[I2c]),
+    .device_rvalid_o(device_rvalid[I2c]),
+    .device_rdata_o (device_rdata[I2c]),
+
+    .scl_i   (i2c_scl_i),
+    .scl_oe_o(i2c_scl_oe_o),
+    .sda_i   (i2c_sda_i),
+    .sda_oe_o(i2c_sda_oe_o)
   );
 
   `ifdef VERILATOR

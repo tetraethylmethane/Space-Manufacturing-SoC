@@ -165,8 +165,14 @@ miserable.
 pass their block testbenches (`dv/blocks`) and the whole-system peripheral
 test (`sw/c/tests/periph_test`), both in CI. The SPI testbench found that MOSI
 changed on the rising SCK edge, which left a mode-0 device no hold time; that
-is fixed. SPI also gained an RX register so firmware can read back. Board check
-pending. See [testing.md](testing.md) for how to run each level.
+is fixed. SPI also gained an RX register so firmware can read back.
+
+**Status (1 Nov 2026):** the SoC had been building SPI as mode 1, so the
+mode-0 fix above was not in the chip; it is now mode 0. The I²C master is
+written (`rtl/system/i2c_host.sv`) and passes its block testbench against two
+target models, one stretching the clock, and the whole-system test against a
+model at 0x50. It is pinned to the second row of Pmod J1. Board check pending
+for all four blocks. See [testing.md](testing.md) for how to run each level.
 
 | Order | Module | Drives | Difficulty |
 |---|---|---|---|

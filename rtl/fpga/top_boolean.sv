@@ -15,11 +15,18 @@ module top_boolean (
   output              UART_TX,
   output              SPI_MOSI,
   input               SPI_MISO,
-  output              SPI_SCK
+  output              SPI_SCK,
+  inout               I2C_SCL,
+  inout               I2C_SDA
 );
   parameter SRAMInitFile = "";
 
   logic clk_sys, rst_sys_n;
+  logic i2c_scl_oe, i2c_sda_oe;
+
+  // I2C pads are open drain: pull low or let the pull-up win.
+  assign I2C_SCL = i2c_scl_oe ? 1'b0 : 1'bz;
+  assign I2C_SDA = i2c_sda_oe ? 1'b0 : 1'bz;
 
   // Instantiating the Ibex Demo System.
   ibex_demo_system #(
@@ -42,6 +49,11 @@ module top_boolean (
     .spi_rx_i(SPI_MISO),
     .spi_tx_o(SPI_MOSI),
     .spi_sck_o(SPI_SCK),
+
+    .i2c_scl_i(I2C_SCL),
+    .i2c_scl_oe_o(i2c_scl_oe),
+    .i2c_sda_i(I2C_SDA),
+    .i2c_sda_oe_o(i2c_sda_oe),
 
     .trst_ni(1'b1),
     .tms_i(),
