@@ -60,10 +60,14 @@ bash util/setup_synth_boolean.sh sw/c/build/tests/periph_test.vmem   # WSL
 .\util\build_boolean.ps1 -Program                                    # Windows
 ```
 
-Put a jumper between pins 1 and 2 of Pmod connector J1 (MOSI to MISO). SCK is
-on pin 3 if you want to look at it with a scope. I²C is on the second row of
-J1, opposite pins 1 and 2 (SCL opposite pin 1, SDA opposite pin 2); leave it
-unconnected. Then open the UART at
+The SPI and I²C pins are on PMODA, the bottom half of the long connector on
+the left edge of the board (silkscreen J1; not the "(J1)" under BTN3, which is
+an FPGA pin name). Counting up from the bottom end, positions 1–4 of each row
+are signals and positions 5 and 6 are GND and 3V3. One row carries SPI (1 MOSI,
+2 MISO, 3 SCK); the other carries I²C (1 SCL, 2 SDA). Put a jumper across the
+bottom two pins of the SPI row. If SPI fails and I²C times out, the jumper is
+on the I²C row (SCL shorted to SDA); move it to the other row. Both are safe to
+short. Keep clear of the GND and 3V3 positions. Then open the UART at
 115,200 baud and press reset. Expected:
 
 - `PASS timer`, `PASS spi`, `PASS i2c` and `PASS xadc`, then

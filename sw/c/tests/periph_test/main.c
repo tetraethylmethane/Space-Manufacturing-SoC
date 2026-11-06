@@ -9,7 +9,7 @@
 // XADC model returns fixed readings (45.0 C, 1.00 V, 1.80 V, 1.00 V). It
 // halts the simulator when done.
 //
-// The board build (periph_test) needs a jumper from Pmod J1 pin 1 (MOSI) to
+// The board build (periph_test) needs a jumper from PMODA pin 1 (MOSI) to
 // pin 2 (MISO). It skips the PWM measurement (the GPIO inputs are switches
 // there). With nothing on the I2C pins it only checks that an empty address
 // gets no ACK, which fails if SCL or SDA is stuck low. The XADC readings must
@@ -209,7 +209,7 @@ static void test_spi(void) {
   for (uint32_t v = 0; v < 256; v++) {
     int r = spi_xfer_byte(&spi, v, 10000);
     if (r < 0) {
-      fail("spi", "no byte back (is J1 pin 1 jumpered to pin 2?)", v, v);
+      fail("spi", "no byte back (is PMODA pin 1 jumpered to pin 2?)", v, v);
       break;
     }
     if ((uint32_t)r != v) {

@@ -63,14 +63,15 @@ set_property -dict {PACKAGE_PIN V5 IOSTANDARD LVCMOS33} [get_ports {RGB_LED[5]}]
 set_property -dict {PACKAGE_PIN V12 IOSTANDARD LVCMOS33} [get_ports {UART_RX}]
 set_property -dict {PACKAGE_PIN U11 IOSTANDARD LVCMOS33} [get_ports {UART_TX}]
 
-# SPI on Pmod connector J1, pins 1-3 (schematic sheet 5: JA1_P, JA1_N, JA2_P).
+# SPI on PMODA (connector J1, left edge, bottom half), pins 1-3 counted up from
+# the bottom (schematic sheet 5: JA1_P, JA1_N, JA2_P).
 # Jumper pin 1 to pin 2 for the loopback test. MISO is pulled up, so an open
 # pin reads 0xFF.
 set_property -dict {PACKAGE_PIN B13 IOSTANDARD LVCMOS33} [get_ports {SPI_MOSI}]
 set_property -dict {PACKAGE_PIN A13 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {SPI_MISO}]
 set_property -dict {PACKAGE_PIN B14 IOSTANDARD LVCMOS33} [get_ports {SPI_SCK}]
 
-# I2C on Pmod connector J1, second row, opposite SPI pins 1 and 2 (schematic
+# I2C on PMODA, the other row, opposite SPI pins 1 and 2 (schematic
 # sheet 5: JA3_P, JA3_N; sheet 11: E12, D12). The internal pull-ups are weak;
 # fit 4.7k pull-ups to 3.3 V when a real device is connected.
 set_property -dict {PACKAGE_PIN E12 IOSTANDARD LVCMOS33 PULLUP TRUE} [get_ports {I2C_SCL}]

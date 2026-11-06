@@ -2,7 +2,8 @@
 //
 // Answers a read Latency clocks after DEN with the value in regs[], which
 // starts with plausible readings and can be changed by a testbench. It counts
-// protocol errors: a DEN while a read is still outstanding.
+// protocol errors: a DEN while a read is still outstanding, and (reset_dens)
+// a DEN while in reset, which the real XADC latches and answers late.
 module xadc_model #(
   parameter int Latency = 5
 ) (
@@ -15,7 +16,9 @@ module xadc_model #(
 );
 
   logic [15:0] regs [128];
-  int          protocol_errs = 0, reads = 0;
+  int          protocol_errs = 0, reads = 0, reset_dens = 0;
+
+  always @(posedge clk_i) if (!rst_ni && den_i) reset_dens <= reset_dens + 1;
   int          count_q;
   logic [6:0]  addr_q;
 

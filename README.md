@@ -28,7 +28,7 @@ Phase 1 of 6, working towards the month-2 review.
 - [x] Bus interface and memory map frozen ([spec](doc/bus-and-memory-map.md))
 - [x] Timer, PWM and SPI tested: block testbenches and a whole-system firmware test, both in CI ([testing](doc/testing.md))
 - [x] I²C master and XADC interface written and tested the same way
-- [ ] Timer, PWM, SPI, I²C and XADC checked on the board
+- [x] Timer, SPI, I²C and XADC checked on the board (`periph_test`: ALL PASS); PWM has no board measurement yet
 
 ## Repository layout
 

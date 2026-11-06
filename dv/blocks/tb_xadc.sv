@@ -62,7 +62,7 @@ module tb_xadc;
   logic [31:0] r, s0, s1;
 
   initial begin
-    repeat (3) @(negedge clk);
+    repeat (20) @(negedge clk);
     rst_n = 1'b1;
 
     // Before the first DRDY nothing has been read.
@@ -100,6 +100,7 @@ module tb_xadc;
     bus_read(Base + 32'h800, r);
     check(r == 0, "offset 0x800 reads non-zero");
 
+    check(xadc.reset_dens == 0, $sformatf("DEN high on %0d clocks during reset", xadc.reset_dens));
     check(xadc.protocol_errs == 0, $sformatf("%0d DEN pulses while a read was pending", xadc.protocol_errs));
     check(bad_addr == 0, $sformatf("%0d DRP reads outside the status registers", bad_addr));
     // Every pass is exactly six DRP reads (one more may be in flight).

@@ -171,10 +171,17 @@ is fixed. SPI also gained an RX register so firmware can read back.
 mode-0 fix above was not in the chip; it is now mode 0. The I²C master is
 written (`rtl/system/i2c_host.sv`) and passes its block testbench against two
 target models, one stretching the clock, and the whole-system test against a
-model at 0x50. It is pinned to the second row of Pmod J1. The XADC interface
+model at 0x50. It is pinned to the second row of PMODA (connector J1). The XADC interface
 (`rtl/system/xadc_host.sv`) reads die temperature and the three supplies into
-shadow registers; simulation swaps the XADC primitive for a model. Board check
-pending for all five blocks. See [testing.md](testing.md) for how to run each level.
+shadow registers; simulation swaps the XADC primitive for a model.
+
+**Status (6 Nov 2026):** `periph_test` passes on the board: timer, SPI
+loopback, I²C and XADC (35 °C, VCCINT 1.001 V, VCCAUX 1.793 V, VCCBRAM
+1.002 V). The board run found an XADC bug that simulation had missed: DEN was
+high during reset, the XADC latched that read and answered it late, and every
+later reading landed one register too far on. DEN is now a registered pulse,
+and the model flags any DEN during reset. Build: 6,759 LUTs, 32/75 BRAM,
+WNS 0.779 ns. See [testing.md](testing.md) for how to run each level.
 
 | Order | Module | Drives | Difficulty |
 |---|---|---|---|

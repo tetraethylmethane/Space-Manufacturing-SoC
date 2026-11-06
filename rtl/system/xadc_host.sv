@@ -45,17 +45,29 @@ module xadc_host #(
   logic [15:0] shadow_q [NumRegs];
   logic [31:0] scans_q;
   logic [2:0]  idx_q;
-  logic        wait_q;
+  logic        wait_q, den_q;
+  logic [4:0]  start_q;
 
   // Poll: issue one DRP read, wait for DRDY, store it, move on.
+  // DEN is a registered pulse, so it is never high in reset: a read latched
+  // by the XADC during reset would answer late and shift every later result
+  // into the next register. The first read also waits a few clocks after
+  // reset so the XADC is out of its own reset.
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       idx_q    <= '0;
       wait_q   <= 1'b0;
+      den_q    <= 1'b0;
+      start_q  <= '0;
       scans_q  <= '0;
       shadow_q <= '{default: '0};
+    end else if (!(&start_q)) begin
+      start_q <= start_q + 5'd1;
     end else if (!wait_q) begin
+      den_q  <= 1'b1;
       wait_q <= 1'b1;
+    end else if (den_q) begin
+      den_q <= 1'b0;
     end else if (drp_rdy_i) begin
       shadow_q[idx_q] <= drp_do_i;
       wait_q          <= 1'b0;
@@ -68,7 +80,7 @@ module xadc_host #(
     end
   end
 
-  assign drp_en_o   = !wait_q;  // one-cycle pulse starts each read
+  assign drp_en_o   = den_q;  // one-cycle pulse starts each read
   assign drp_addr_o = DrpAddr[idx_q];
 
   logic [RegAddr-1:0] reg_addr;
